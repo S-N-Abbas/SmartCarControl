@@ -21,8 +21,14 @@ android {
             useSupportLibrary = true
         }
 
-        // Gemini API Key — we'll set this in local.properties later
-        buildConfigField("String", "GEMINI_API_KEY", "\"\"")
+        // Gemini API Key
+        val localProperties = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir, providers)
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${localProperties.getProperty("GEMINI_API_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
