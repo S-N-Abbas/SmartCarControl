@@ -102,6 +102,11 @@ dependencies {
 
     // App Compat Theme
     implementation(libs.androidx.appcompat)
+
+    // Junit
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
 
 // Allow references to generated code
