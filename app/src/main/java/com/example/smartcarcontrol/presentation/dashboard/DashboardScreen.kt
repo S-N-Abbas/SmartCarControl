@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -102,14 +103,17 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Icon(
-                        imageVector = Icons.Default.DirectionsCar,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .padding(end = 4.dp)
-                    )
-                    Text("Smart Car Control")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsCar,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text("Smart Car Control")
+                    }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
