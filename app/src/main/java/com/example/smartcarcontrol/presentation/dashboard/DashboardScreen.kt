@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Window
 import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,6 +70,7 @@ data class CommandItem(
 @Composable
 fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
+    onNavigateToAITest: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -116,6 +118,12 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToAITest) {
+                        Icon(
+                            Icons.Default.Science,
+                            contentDescription = "Test AI"
+                        )
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }

@@ -5,12 +5,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.smartcarcontrol.presentation.dashboard.AITestScreen
 import com.example.smartcarcontrol.presentation.dashboard.DashboardScreen
 import com.example.smartcarcontrol.presentation.settings.SettingsScreen
 
 sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Settings : Screen("settings")
+    object AITest : Screen("ai_test")
 }
 
 @Composable
@@ -23,6 +25,9 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             DashboardScreen(
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToAITest = {
+                    navController.navigate(Screen.AITest.route)
                 }
             )
         }
@@ -32,6 +37,9 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
                     navController.popBackStack()
                 }
             )
+        }
+        composable(Screen.AITest.route) {
+            AITestScreen()
         }
     }
 }

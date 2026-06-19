@@ -20,5 +20,8 @@ object Constants {
 
     // Gemini
     const val GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/"
-    const val GEMINI_MODEL = "gemini-1.5-flash"
+    const val GEMINI_MODEL = "gemini-1.5-flash-latest"
+
+    // Test Mode — set to false when ESP32 is ready
+    const val TEST_MODE = true
 }

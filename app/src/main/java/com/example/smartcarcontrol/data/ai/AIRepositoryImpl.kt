@@ -11,23 +11,51 @@ class AIRepositoryImpl @Inject constructor(
 ) : IAIRepository {
 
     override suspend fun processVoiceCommand(text: String): CarCommand {
-        return try {
-            val prompt = buildPrompt(text)
-            val request = GeminiRequest(
-                contents = listOf(
-                    GeminiRequest.Content(
-                        parts = listOf(GeminiRequest.Part(prompt))
+        repeat(3) { attempt ->
+            try {
+                val prompt = buildPrompt(text)
+                val request = GeminiRequest(
+                    contents = listOf(
+                        GeminiRequest.Content(
+                            parts = listOf(GeminiRequest.Part(prompt))
+                        )
                     )
                 )
-            )
-            val response = geminiApiService.generateContent(
-                apiKey = BuildConfig.GEMINI_API_KEY,
-                request = request
-            )
-            parseResponse(response)
-        } catch (e: Exception) {
-            CarCommand.UNKNOWN
+                val response = geminiApiService.generateContent(
+                    apiKey = BuildConfig.GEMINI_API_KEY,
+                    request = request
+                )
+
+                val rawText = response.candidates
+                    ?.firstOrNull()
+                    ?.content
+                    ?.parts
+                    ?.firstOrNull()
+                    ?.text
+                android.util.Log.d("AIRepository", "Raw Gemini response: '$rawText'")
+
+                return parseResponse(response)
+
+            } catch (e: retrofit2.HttpException) {
+                when (e.code()) {
+                    429 -> {
+                        val errorBody = e.response()?.errorBody()?.string()
+                        android.util.Log.w("AIRepository", "Rate limited on attempt ${attempt + 1}/3")
+                        // Wait longer between retries
+                        kotlinx.coroutines.delay(5000L * (attempt + 1)) // 5s, 10s, 15s
+                    }
+                    else -> {
+                        android.util.Log.e("AIRepository", "HTTP Error ${e.code()}: ${e.message()}")
+                        return CarCommand.UNKNOWN
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AIRepository", "Error calling Gemini: ${e.message}", e)
+                return CarCommand.UNKNOWN
+            }
         }
+        android.util.Log.e("AIRepository", "All retry attempts failed")
+        return CarCommand.UNKNOWN
     }
 
     private fun buildPrompt(userText: String): String {

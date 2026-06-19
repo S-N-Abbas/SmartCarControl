@@ -79,6 +79,22 @@ class DashboardViewModel @Inject constructor(
     fun sendCommand(command: CarCommand) {
         _uiState.update { it.copy(isLoading = true, lastCommand = command) }
         viewModelScope.launch {
+            if (Constants.TEST_MODE) {
+                // Simulate ESP32 response in test mode
+                kotlinx.coroutines.delay(1000)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        lastResult = CommandResult(
+                            command = command,
+                            success = true,
+                            message = "[TEST] ${command.name} executed successfully"
+                        )
+                    )
+                }
+                return@launch
+            }
+
             val sent = sendCarCommandUseCase(command)
             if (!sent) {
                 _uiState.update {
