@@ -68,6 +68,15 @@ class SettingsViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
+
+    fun onPermissionDenied() {
+        _uiState.update {
+            it.copy(
+                isScanning = false,
+                errorMessage = "Bluetooth permission denied. Please grant permission in Settings."
+            )
+        }
+    }
 }
 
 data class SettingsUiState(

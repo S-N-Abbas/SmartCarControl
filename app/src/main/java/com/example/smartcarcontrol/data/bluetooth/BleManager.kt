@@ -44,17 +44,33 @@ class BleManager @Inject constructor(
     private val _scannedDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
     val scannedDevices = _scannedDevices.asStateFlow()
 
+    fun startScan() {
+        _scannedDevices.value = emptyList()
+        android.util.Log.d("BleManager", "Starting BLE scan...")
+        val scanner = bluetoothAdapter.bluetoothLeScanner
+        if (scanner == null) {
+            android.util.Log.e("BleManager", "BLE Scanner is NULL — Bluetooth might be off")
+            return
+        }
+        scanner.startScan(scanCallback)
+        android.util.Log.d("BleManager", "Scan started successfully")
+    }
+
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
-            val name = device.name ?: "Unknown"
-            val address = device.address
-            val newDevice = BluetoothDevice(name, address)
+            val name = device.name ?: return
+            android.util.Log.d("BleManager", "Found device: $name — ${device.address}")
+            val newDevice = BluetoothDevice(name, device.address)
             val current = _scannedDevices.value.toMutableList()
-            if (current.none { it.address == address }) {
+            if (current.none { it.address == device.address }) {
                 current.add(newDevice)
                 _scannedDevices.value = current
             }
+        }
+
+        override fun onScanFailed(errorCode: Int) {
+            android.util.Log.e("BleManager", "Scan failed with error code: $errorCode")
         }
     }
 
@@ -99,11 +115,6 @@ class BleManager @Inject constructor(
         }
     }
 
-    fun startScan() {
-        _scannedDevices.value = emptyList()
-        bluetoothAdapter.bluetoothLeScanner?.startScan(scanCallback)
-    }
-
     fun stopScan() {
         bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
     }
@@ -121,10 +132,17 @@ class BleManager @Inject constructor(
     fun sendData(data: String): Boolean {
         return try {
             esp32Characteristic?.let { char ->
+                android.util.Log.d("BleManager", "Sending command: $data")
                 char.value = data.toByteArray(Charsets.UTF_8)
-                bluetoothGatt?.writeCharacteristic(char) ?: false
-            } ?: false
+                val result = bluetoothGatt?.writeCharacteristic(char) ?: false
+                android.util.Log.d("BleManager", "Send result: $result")
+                result
+            } ?: run {
+                android.util.Log.e("BleManager", "Characteristic is NULL — not connected?")
+                false
+            }
         } catch (e: Exception) {
+            android.util.Log.e("BleManager", "Send error: ${e.message}")
             false
         }
     }

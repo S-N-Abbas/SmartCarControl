@@ -1,5 +1,7 @@
 package com.example.smartcarcontrol.presentation.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.smartcarcontrol.domain.model.BluetoothDevice
+import com.example.smartcarcontrol.util.PermissionHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +50,18 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Permission Launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            viewModel.startScan()
+        } else {
+            viewModel.onPermissionDenied()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -123,9 +138,30 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Error Message
+            uiState.errorMessage?.let { error ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = error,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             // Scan Button
             Button(
-                onClick = viewModel::startScan,
+                onClick = {
+                    permissionLauncher.launch(PermissionHandler.BLUETOOTH_PERMISSIONS)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isScanning && !uiState.isConnecting
             ) {
@@ -142,7 +178,7 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Scanned Devices List
+            // Scanning Indicator
             if (uiState.isScanning && uiState.devices.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                 Text(
@@ -152,6 +188,7 @@ fun SettingsScreen(
                 )
             }
 
+            // Device List
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(uiState.devices) { device ->
                     DeviceItem(
@@ -196,7 +233,7 @@ private fun DeviceItem(
                 Text(
                     text = device.address,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
             if (isConnecting) {
