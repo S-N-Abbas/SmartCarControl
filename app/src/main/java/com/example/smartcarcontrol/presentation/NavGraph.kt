@@ -5,7 +5,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.smartcarcontrol.presentation.dashboard.AITestScreen
 import com.example.smartcarcontrol.presentation.dashboard.DashboardScreen
 import com.example.smartcarcontrol.presentation.settings.SettingsScreen
 
@@ -37,9 +36,6 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
                     navController.popBackStack()
                 }
             )
-        }
-        composable(Screen.AITest.route) {
-            AITestScreen()
         }
     }
 }

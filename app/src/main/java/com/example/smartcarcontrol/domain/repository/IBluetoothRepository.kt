@@ -2,7 +2,6 @@ package com.example.smartcarcontrol.domain.repository
 
 import com.example.smartcarcontrol.domain.model.BluetoothDevice
 import com.example.smartcarcontrol.domain.model.CarCommand
-import com.example.smartcarcontrol.domain.model.CommandResult
 import kotlinx.coroutines.flow.Flow
 
 interface IBluetoothRepository {
@@ -12,4 +11,6 @@ interface IBluetoothRepository {
     suspend fun connectToDevice(device: BluetoothDevice): Boolean
     suspend fun sendCommand(command: CarCommand): Boolean
     suspend fun disconnect()
+    suspend fun getSavedDevice(): BluetoothDevice?
+    suspend fun autoConnect(): Boolean
 }

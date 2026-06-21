@@ -2,15 +2,15 @@ package com.example.smartcarcontrol.data.ai
 
 import com.example.smartcarcontrol.BuildConfig
 import com.example.smartcarcontrol.domain.model.CarCommand
+import com.example.smartcarcontrol.domain.model.GeminiResult
 import com.example.smartcarcontrol.domain.repository.IAIRepository
-import com.example.smartcarcontrol.util.Constants
 import javax.inject.Inject
 
 class AIRepositoryImpl @Inject constructor(
     private val geminiApiService: GeminiApiService
 ) : IAIRepository {
 
-    override suspend fun processVoiceCommand(text: String): CarCommand {
+    override suspend fun processInput(text: String): GeminiResult {
         repeat(3) { attempt ->
             try {
                 val prompt = buildPrompt(text)
@@ -32,64 +32,83 @@ class AIRepositoryImpl @Inject constructor(
                     ?.parts
                     ?.firstOrNull()
                     ?.text
-                android.util.Log.d("AIRepository", "Raw Gemini response: '$rawText'")
+                    ?.trim()
 
-                return parseResponse(response)
+                android.util.Log.d("AIRepository", "Raw Gemini response: '$rawText'")
+                return parseResponse(rawText)
 
             } catch (e: retrofit2.HttpException) {
                 when (e.code()) {
                     429 -> {
                         val errorBody = e.response()?.errorBody()?.string()
-                        android.util.Log.w("AIRepository", "Rate limited on attempt ${attempt + 1}/3")
-                        // Wait longer between retries
-                        kotlinx.coroutines.delay(5000L * (attempt + 1)) // 5s, 10s, 15s
+                        android.util.Log.w("AIRepository", "Rate limited. Body: $errorBody. Attempt ${attempt + 1}/3")
+                        kotlinx.coroutines.delay(5000L * (attempt + 1))
                     }
                     else -> {
                         android.util.Log.e("AIRepository", "HTTP Error ${e.code()}: ${e.message()}")
-                        return CarCommand.UNKNOWN
+                        return GeminiResult.ChatReply("Sorry, I couldn't connect to AI service.")
                     }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("AIRepository", "Error calling Gemini: ${e.message}", e)
-                return CarCommand.UNKNOWN
+                return GeminiResult.ChatReply("Sorry, something went wrong.")
             }
         }
-        android.util.Log.e("AIRepository", "All retry attempts failed")
-        return CarCommand.UNKNOWN
+        return GeminiResult.ChatReply("Service unavailable. Please try again.")
     }
 
     private fun buildPrompt(userText: String): String {
         return """
-            You are a smart car assistant. The user said: "$userText"
+            You are SmartCar AI Assistant built into a car control app.
+            The user said: "$userText"
             
-            Match this to exactly ONE of these commands and respond with ONLY the command name, nothing else:
-            - UNLOCK_DOOR
-            - LOCK_DOOR
-            - OPEN_WINDOW
-            - CLOSE_WINDOW
-            - OPEN_TRUNK
-            - CLOSE_TRUNK
-            - UNKNOWN (if nothing matches)
+            First determine if this is a CAR COMMAND or a CHAT MESSAGE.
             
-            Response must be a single word from the list above. No explanation.
+            CAR COMMANDS are requests to control the car physically:
+            - Anything about locking/unlocking doors
+            - Anything about windows (open/close/roll up/roll down)
+            - Anything about trunk/boot (open/close/pop)
+            
+            CHAT MESSAGES are everything else:
+            - Questions (time, date, weather, math, science, general knowledge)
+            - Greetings and conversation
+            - Jokes, stories
+            - Anything not related to physical car control
+            
+            If it is a CAR COMMAND, respond with ONLY one of these exact words:
+            UNLOCK_DOOR | LOCK_DOOR | OPEN_WINDOW | CLOSE_WINDOW | OPEN_TRUNK | CLOSE_TRUNK
+            
+            If it is a CHAT MESSAGE, respond with:
+            CHAT: followed by your helpful, concise response (max 2-3 sentences)
+            
+            Examples:
+            "unlock my car" → UNLOCK_DOOR
+            "what time is it" → CHAT: I don't have access to real-time clock, but you can check your phone's status bar for the current time.
+            "what is 25 times 4" → CHAT: 25 times 4 equals 100.
+            "tell me a joke" → CHAT: Why don't scientists trust atoms? Because they make up everything!
+            "open the windows" → OPEN_WINDOW
+            "what is the speed of light" → CHAT: The speed of light is approximately 299,792 kilometers per second in a vacuum.
         """.trimIndent()
     }
 
-    private fun parseResponse(response: GeminiResponse): CarCommand {
-        val text = response.candidates
-            ?.firstOrNull()
-            ?.content
-            ?.parts
-            ?.firstOrNull()
-            ?.text
-            ?.trim()
-            ?.uppercase()
-            ?: return CarCommand.UNKNOWN
+    private fun parseResponse(rawText: String?): GeminiResult {
+        if (rawText.isNullOrBlank()) {
+            return GeminiResult.ChatReply("I didn't get a response. Please try again.")
+        }
 
+        // Check if it's a chat response
+        if (rawText.startsWith("CHAT:", ignoreCase = true)) {
+            val message = rawText.removePrefix("CHAT:").trim()
+            return GeminiResult.ChatReply(message)
+        }
+
+        // Try to match a car command
         return try {
-            CarCommand.valueOf(text)
+            val command = CarCommand.valueOf(rawText.uppercase())
+            GeminiResult.Command(command)
         } catch (e: IllegalArgumentException) {
-            CarCommand.UNKNOWN
+            // Gemini returned something else — treat as chat
+            GeminiResult.ChatReply(rawText)
         }
     }
 }

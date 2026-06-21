@@ -44,16 +44,31 @@ class BleManager @Inject constructor(
     private val _scannedDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
     val scannedDevices = _scannedDevices.asStateFlow()
 
+    private var isScanning = false
+
     fun startScan() {
         _scannedDevices.value = emptyList()
-        android.util.Log.d("BleManager", "Starting BLE scan...")
         val scanner = bluetoothAdapter.bluetoothLeScanner
         if (scanner == null) {
             android.util.Log.e("BleManager", "BLE Scanner is NULL — Bluetooth might be off")
             return
         }
+        // Stop any existing scan first
+        if (isScanning) {
+            android.util.Log.d("BleManager", "Stopping existing scan before starting new one")
+            scanner.stopScan(scanCallback)
+            isScanning = false
+        }
+        android.util.Log.d("BleManager", "Starting BLE scan...")
         scanner.startScan(scanCallback)
+        isScanning = true
         android.util.Log.d("BleManager", "Scan started successfully")
+    }
+
+    fun stopScan() {
+        bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
+        isScanning = false
+        android.util.Log.d("BleManager", "Scan stopped")
     }
 
     private val scanCallback = object : ScanCallback() {
@@ -113,10 +128,6 @@ class BleManager @Inject constructor(
                 _incomingData.emit(data)
             }
         }
-    }
-
-    fun stopScan() {
-        bluetoothAdapter.bluetoothLeScanner?.stopScan(scanCallback)
     }
 
     fun connect(device: BluetoothDevice): Boolean {

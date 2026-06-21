@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.example.smartcarcontrol"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.smartcarcontrol"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -72,6 +72,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.compose.material3)
     // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -118,6 +119,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Splash Screen
+    implementation(libs.androidx.splashscreen)
 }
 
 // Allow references to generated code
