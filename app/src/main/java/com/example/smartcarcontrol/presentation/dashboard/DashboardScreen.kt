@@ -29,9 +29,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Window
-import androidx.compose.material.icons.filled.Weekend
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
