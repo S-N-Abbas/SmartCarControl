@@ -42,7 +42,7 @@ class DashboardViewModel @Inject constructor(
     private fun observeConnectionState() {
         viewModelScope.launch {
             bluetoothRepository.connectionState.collect { connected ->
-                _uiState.update { it.copy(isConnected = connected) }
+                _uiState.update { it.copy(isConnected = connected, isAuthenticated = connected) }
                 if (connected) {
                     android.util.Log.d("DashboardVM", "Connected — auto-connect loop will pause")
                 } else {
@@ -169,6 +169,7 @@ class DashboardViewModel @Inject constructor(
 
 data class DashboardUiState(
     val isConnected: Boolean = false,
+    val isAuthenticated: Boolean = false,
     val isLoading: Boolean = false,
     val voiceState: VoiceState = VoiceState.Idle,
     val lastCommand: CarCommand? = null,

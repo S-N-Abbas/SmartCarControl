@@ -24,4 +24,9 @@ object Constants {
 
     // Test Mode — set to false when ESP32 is ready
     const val TEST_MODE = false
+
+    // Security
+    const val AUTH_CHALLENGE_CHARACTERISTIC_UUID = "c8e4c1d2-f3a4-4b5c-8d6e-9f0a1b2c3d4e"
+    const val AUTH_RESPONSE_CHARACTERISTIC_UUID  = "d9f5d2e3-a4b5-5c6d-9e7f-0a1b2c3d4e5f"
+    const val AUTH_TIMEOUT_MS = 5000L // 5 seconds to authenticate
 }

@@ -34,6 +34,12 @@ android {
             "GEMINI_API_KEY",
             "\"${localProps.getProperty("GEMINI_API_KEY") ?: ""}\""
         )
+
+        buildConfigField(
+            "String",
+            "AUTH_SECRET_KEY",
+            "\"${localProps.getProperty("AUTH_SECRET_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
